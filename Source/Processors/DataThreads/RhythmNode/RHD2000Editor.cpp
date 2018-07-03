@@ -88,7 +88,6 @@ FPGAchannelList::FPGAchannelList(GenericProcessor* proc_, Viewport* p, FPGAcanva
     gains.add(500);
     gains.add(1000);
 
-
     update();
 }
 
@@ -116,6 +115,18 @@ void FPGAchannelList::buttonClicked(Button* btn)
     {
         p->setAutoMeasureImpedance(btn->getToggleState());
     }
+	else {
+		juce::String str = btn->getButtonText();
+		for (int k = 0; k < 8; k++){
+			juce::String str2 = btnTTLs[k]->getButtonText();
+			CoreServices::sendStatusMessage(str2);
+			if (str == str2){
+				CoreServices::sendStatusMessage("youhou");
+				p->sendSetTTLValue(k, btn->getToggleState());
+				break;
+			}
+		}
+	}
 }
 
 void FPGAchannelList::update()
@@ -225,8 +236,6 @@ void FPGAchannelList::update()
             }
         }
     }
-
-
     StringArray ttlNames;
     proc->getEventChannelNames(ttlNames);
     // add buttons for TTL channels
@@ -237,7 +246,27 @@ void FPGAchannelList::update()
         comp->setUserDefinedData(k);
         addAndMakeVisible(comp);
         channelComponents.add(comp);
+
+		//*
+		//UtilityButton* dacttlPin = new UtilityButton("ttl" + to_string(k + 1), Font("Small Text", 13, Font::plain));
+		UtilityButton* btn = new UtilityButton("ttl" + to_string(k + 1), Font("Small Text", 13, Font::plain));
+		btn->setBounds(10 + (numActiveHeadstages + 1)*columnWidth, 70 + k * 22, columnWidth, 22);
+		btn->addListener(this);
+		btn->setClickingTogglesState(true);
+		btn->setTooltip("Digital Out");
+		btnTTLs.add(btn);
+		addAndMakeVisible(btn);
+		//*/
     }
+
+	/*
+	dacttlPin1->setBounds(10 + (numActiveHeadstages + 1)*columnWidth, 70 + 0 * 22, columnWidth, 22);
+	dacttlPin1->addListener(this);
+	dacttlPin1->setClickingTogglesState(true);
+	dacttlPin1->setTooltip("Digital Out");
+	addAndMakeVisible(dacttlPin1);
+	*/
+
 
     Label* lbl = new Label("TTL Events","TTL Events");
     lbl->setEditable(false);
@@ -768,6 +797,11 @@ void RHD2000Editor::handleAsyncUpdate()
 
 }
 
+void RHD2000Editor::sendSetTTLValue(int dacChannel, bool en)
+{
+	board->setDACvalue(dacChannel, en);
+}
+
 void RHD2000Editor::setSaveImpedance(bool en)
 {
     saveImpedances = en;
@@ -847,9 +881,9 @@ void RHD2000Editor::buttonEvent(Button* button)
 		CoreServices::updateSignalChain(this);
         std::cout << "Editor visible." << "\n";
     }
-    else if (button == dacTTLButton)
+	else if (button == dacTTLButton)
     {
-        board->setTTLoutputMode(dacTTLButton->getToggleState());
+		board->setTTLoutputMode(button->getToggleState());
     }
     else if (button == dspoffsetButton && !acquisitionIsActive)
     {

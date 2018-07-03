@@ -24,6 +24,7 @@
 #include "RHD2000Thread.h"
 #include "RHD2000Editor.h"
 #include "../../SourceNode/SourceNode.h"
+#include <Windows.h>
 
 #if defined(_WIN32)
 #define okLIB_NAME "okFrontPanel.dll"
@@ -144,10 +145,11 @@ RHD2000Thread::RHD2000Thread(SourceNode* sn) : DataThread(sn),
         dacChannels = new int[8];
         dacThresholds = new float[8];
         dacChannelsToUpdate = new bool[8];
+		ttlOutArray = new int[16];
         for (int k = 0; k < 8; k++)
         {
             dacChannelsToUpdate[k] = true;
-            dacStream[k] = 0;
+            dacStream[k] = 32;
             setDACthreshold(k, 65534);
             dacChannels[k] = 0;
             dacThresholds[k] = 0;
@@ -1022,6 +1024,13 @@ void RHD2000Thread::setTTLoutputMode(bool state)
     dacOutputShouldChange = true;
 }
 
+void RHD2000Thread::setDACvalue(int dacChannel, bool enabled)
+{
+	ttlOutArray[dacChannel] = enabled ? 1 : 0;
+	ttlMode = false;
+	dacOutputShouldChange = true;	
+}
+
 void RHD2000Thread::setDAChpf(float cutoff, bool enabled)
 {
     dacOutputShouldChange = true;
@@ -1598,37 +1607,56 @@ bool RHD2000Thread::updateBuffer()
 
 
     if (dacOutputShouldChange)
-    {
-		std::cout << "DAC" << std::endl;
-        for (int k=0; k<8; k++)
-        {
-            if (dacChannelsToUpdate[k])
-            {
-                dacChannelsToUpdate[k] = false;
-                if (dacChannels[k] >= 0)
-                {
-                    evalBoard->enableDac(k, true);
-                    evalBoard->selectDacDataStream(k, dacStream[k]);
-                    evalBoard->selectDacDataChannel(k, dacChannels[k]);
-                    evalBoard->setDacThreshold(k, (int)abs((dacThresholds[k]/0.195) + 32768),dacThresholds[k] >= 0);
-                   // evalBoard->setDacThresholdVoltage(k, (int) dacThresholds[k]);
-                }
-                else
-                {
-                    evalBoard->enableDac(k, false);
-                }
-            }
-        }
+	{
+		if (ttlMode){
+			dacOutputShouldChange = false;
+			CoreServices::sendStatusMessage("Not all TTLs are manual.");
 
-        evalBoard->setTtlMode(ttlMode ? 1 : 0);
-        evalBoard->enableExternalFastSettle(fastTTLSettleEnabled);
-        evalBoard->setExternalFastSettleChannel(fastSettleTTLChannel);
-        evalBoard->setDacHighpassFilter(desiredDAChpf);
-        evalBoard->enableDacHighpassFilter(desiredDAChpfState);
-		evalBoard->enableBoardLeds(ledsEnabled);
-        evalBoard->setClockDivider(clockDivideFactor);
+			std::cout << "DAC" << std::endl;
+			for (int k = 0; k < 8; k++)
+			{
+				if (dacChannelsToUpdate[k])
+				{
+					dacChannelsToUpdate[k] = false;
+					if (dacChannels[k] >= 0)
+					{
+						evalBoard->enableDac(k, true);
+						evalBoard->selectDacDataStream(k, dacStream[k]);
+						evalBoard->selectDacDataChannel(k, dacChannels[k]);
+						evalBoard->setDacThreshold(k, (int)abs((dacThresholds[k] / 0.195) + 32768), dacThresholds[k] >= 0);
+						// evalBoard->setDacThresholdVoltage(k, (int) dacThresholds[k]);
+					}
+					else
+					{
+						evalBoard->enableDac(k, false);
+					}
+				}
+			}
 
-        dacOutputShouldChange = false;
+			evalBoard->setTtlMode(ttlMode ? 1 : 0);
+			evalBoard->enableExternalFastSettle(fastTTLSettleEnabled);
+			evalBoard->setExternalFastSettleChannel(fastSettleTTLChannel);
+			evalBoard->setDacHighpassFilter(desiredDAChpf);
+			evalBoard->enableDacHighpassFilter(desiredDAChpfState);
+			evalBoard->enableBoardLeds(ledsEnabled);
+			evalBoard->setClockDivider(clockDivideFactor);
+
+		}
+		else {
+			dacOutputShouldChange = false;
+			CoreServices::sendStatusMessage("All TTLs are manual.");
+			evalBoard->setTtlMode(ttlMode);
+			evalBoard->setTtlOut(ttlOutArray);
+			evalBoard->enableDac(2, true);
+			evalBoard->selectDacDataStream(2, 16);
+			if (ttlOutArray[0]){
+				evalBoard->setDacManual(65535);
+			}
+			else {
+				evalBoard->setDacManual(0);
+				
+			}
+		}
     }
 	
     return true;

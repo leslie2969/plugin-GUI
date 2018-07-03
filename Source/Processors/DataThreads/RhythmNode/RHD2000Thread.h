@@ -105,6 +105,7 @@ public:
     void setFastTTLSettle (bool state, int channel);
     void setTTLoutputMode (bool state);
     void setDAChpf (float cutoff, bool enabled);
+	void setDACvalue(int dacChannel, bool enabled);
 
     void scanPorts();
     void enableAdcs (bool);
@@ -209,6 +210,7 @@ private:
     int* dacChannels, *dacStream;
     float* dacThresholds;
     bool* dacChannelsToUpdate;
+	int* ttlOutArray;
     Array<int> chipId;
     OwnedArray<RHDHeadstage> headstagesArray;
     Array<Rhd2000EvalBoard::BoardDataSource> enabledStreams;

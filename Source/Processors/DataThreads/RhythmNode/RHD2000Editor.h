@@ -83,12 +83,14 @@ private:
     Viewport* viewport;
     FPGAcanvas* canvas;
     ScopedPointer<UtilityButton> impedanceButton;
+	ScopedPointer<UtilityButton> dacttlPin;
     ScopedPointer<ToggleButton> saveImpedanceButton;
     ScopedPointer<ToggleButton> autoMeasureButton;
     ScopedPointer<ComboBox> numberingScheme;
     ScopedPointer<Label> numberingSchemeLabel;
     OwnedArray<Label> staticLabels;
     OwnedArray<FPGAchannelComponent> channelComponents;
+	OwnedArray<UtilityButton> btnTTLs;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FPGAchannelList);
 };
 
@@ -187,6 +189,7 @@ public:
     void setAutoMeasureImpedance(bool en);
     bool getSaveImpedance();
     bool getAutoMeasureImpedance();
+	void sendSetTTLValue(int dacChannel, bool en);
 
 	void handleAsyncUpdate();
 
