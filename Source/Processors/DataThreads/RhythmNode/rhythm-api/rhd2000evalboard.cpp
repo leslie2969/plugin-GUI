@@ -282,7 +282,8 @@ void Rhd2000EvalBoard::initialize()
     setDacGain(0);
     setAudioNoiseSuppress(0);
 
-    setTtlMode(1);          // Digital outputs 0-7 are DAC comparators; 8-15 under manual control
+    //setTtlMode(1);          // Digital outputs 0-7 are DAC comparators; 8-15 under manual control
+	setTtlMode(0);          // All 16 TTL outputs are under manual control
 
     setDacThreshold(0, 32768, true);
     setDacThreshold(1, 32768, true);
@@ -1108,7 +1109,7 @@ void Rhd2000EvalBoard::setAudioNoiseSuppress(int noiseSuppress)
 }
 
 // Assign a particular data stream (0-7) to a DAC channel (0-7).  Setting stream
-// to 8 selects DacManual1 value; setting stream to 9 selects DacManual2 value.
+// to 8 selects DacManual value if USB2; setting stream to 16 selects DacManual value if USB3.
 void Rhd2000EvalBoard::selectDacDataStream(int dacChannel, int stream)
 {
     if (dacChannel < 0 || dacChannel > 7) {
