@@ -116,6 +116,8 @@ private:
     uint64 windowSize;
     uint64 binSize;
     
+	bool rising = true;
+
     std::vector<uint64> ttlTimestampBuffer;
     std::vector<std::vector<std::vector<uint64>>> spikeData;// channel.sortedID.spikeInstance.timestamp
     void clearHistogramData(uint64 * const);
