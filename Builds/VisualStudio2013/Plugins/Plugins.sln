@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.40629.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2047
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KWIKFormat", "KWIKFormat\KWIKFormat.vcxproj", "{554C8744-32CD-427C-A9E5-BF9A44440CED}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -56,6 +56,12 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LFP_Viewer", "LFP_Viewer\LFP_Viewer.vcxproj", "{41BD734E-4939-47AD-9714-9629538F7206}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventsEval", "EventsEval\EventsEval.vcxproj", "{77362EDA-D871-4E37-AF23-D981F433F347}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SpikeSorterTDC", "SpikeSorterTDC\SpikeSorterTDC.vcxproj", "{58531802-03B4-4BB5-AE62-4D0F8AE8D4D1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PythonPlugin", "PythonPlugin\PythonPlugin.vcxproj", "{FE72E532-4FB0-4942-A313-5E1256644841}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DACoutFPGA", "DACoutFPGA\DACoutFPGA.vcxproj", "{C4BA2960-877B-4C77-B5AB-21280FB7589A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -319,11 +325,50 @@ Global
 		{77362EDA-D871-4E37-AF23-D981F433F347}.Release|Win32.Build.0 = Release|Win32
 		{77362EDA-D871-4E37-AF23-D981F433F347}.Release|x64.ActiveCfg = Release|x64
 		{77362EDA-D871-4E37-AF23-D981F433F347}.Release|x64.Build.0 = Release|x64
+		{58531802-03B4-4BB5-AE62-4D0F8AE8D4D1}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{58531802-03B4-4BB5-AE62-4D0F8AE8D4D1}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{58531802-03B4-4BB5-AE62-4D0F8AE8D4D1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{58531802-03B4-4BB5-AE62-4D0F8AE8D4D1}.Debug|Win32.Build.0 = Debug|Win32
+		{58531802-03B4-4BB5-AE62-4D0F8AE8D4D1}.Debug|x64.ActiveCfg = Debug|x64
+		{58531802-03B4-4BB5-AE62-4D0F8AE8D4D1}.Debug|x64.Build.0 = Debug|x64
+		{58531802-03B4-4BB5-AE62-4D0F8AE8D4D1}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{58531802-03B4-4BB5-AE62-4D0F8AE8D4D1}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{58531802-03B4-4BB5-AE62-4D0F8AE8D4D1}.Release|Win32.ActiveCfg = Release|Win32
+		{58531802-03B4-4BB5-AE62-4D0F8AE8D4D1}.Release|Win32.Build.0 = Release|Win32
+		{58531802-03B4-4BB5-AE62-4D0F8AE8D4D1}.Release|x64.ActiveCfg = Release|x64
+		{58531802-03B4-4BB5-AE62-4D0F8AE8D4D1}.Release|x64.Build.0 = Release|x64
+		{FE72E532-4FB0-4942-A313-5E1256644841}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{FE72E532-4FB0-4942-A313-5E1256644841}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{FE72E532-4FB0-4942-A313-5E1256644841}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FE72E532-4FB0-4942-A313-5E1256644841}.Debug|Win32.Build.0 = Debug|Win32
+		{FE72E532-4FB0-4942-A313-5E1256644841}.Debug|x64.ActiveCfg = Debug|x64
+		{FE72E532-4FB0-4942-A313-5E1256644841}.Debug|x64.Build.0 = Debug|x64
+		{FE72E532-4FB0-4942-A313-5E1256644841}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{FE72E532-4FB0-4942-A313-5E1256644841}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{FE72E532-4FB0-4942-A313-5E1256644841}.Release|Win32.ActiveCfg = Release|Win32
+		{FE72E532-4FB0-4942-A313-5E1256644841}.Release|Win32.Build.0 = Release|Win32
+		{FE72E532-4FB0-4942-A313-5E1256644841}.Release|x64.ActiveCfg = Release|x64
+		{FE72E532-4FB0-4942-A313-5E1256644841}.Release|x64.Build.0 = Release|x64
+		{C4BA2960-877B-4C77-B5AB-21280FB7589A}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{C4BA2960-877B-4C77-B5AB-21280FB7589A}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{C4BA2960-877B-4C77-B5AB-21280FB7589A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C4BA2960-877B-4C77-B5AB-21280FB7589A}.Debug|Win32.Build.0 = Debug|Win32
+		{C4BA2960-877B-4C77-B5AB-21280FB7589A}.Debug|x64.ActiveCfg = Debug|x64
+		{C4BA2960-877B-4C77-B5AB-21280FB7589A}.Debug|x64.Build.0 = Debug|x64
+		{C4BA2960-877B-4C77-B5AB-21280FB7589A}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{C4BA2960-877B-4C77-B5AB-21280FB7589A}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{C4BA2960-877B-4C77-B5AB-21280FB7589A}.Release|Win32.ActiveCfg = Release|Win32
+		{C4BA2960-877B-4C77-B5AB-21280FB7589A}.Release|Win32.Build.0 = Release|Win32
+		{C4BA2960-877B-4C77-B5AB-21280FB7589A}.Release|x64.ActiveCfg = Release|x64
+		{C4BA2960-877B-4C77-B5AB-21280FB7589A}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F250DB70-6E3E-408C-BD9E-1483D574499D} = {B49D0C12-70A8-4762-A4FE-74FA3D16FFDD}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2A9F0189-4CCC-49F6-871E-BA9BE8C81557}
 	EndGlobalSection
 EndGlobal
