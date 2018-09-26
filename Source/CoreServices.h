@@ -74,6 +74,32 @@ PLUGIN_API int64 getSoftwareTimestamp();
 /** Gets the ticker frequency of the software timestamp clock*/
 PLUGIN_API float getSoftwareSampleRate();
 
+/** Sets the state of ManualDAC*/
+PLUGIN_API void setManualDACStatus(int status);
+
+/** Gets the state of ManualDAC*/
+PLUGIN_API int getManualDACStatus();
+
+extern int ManualDACStatus;
+
+
+/** Sets the state of TTLout*/
+PLUGIN_API void setTTLoutStatus(int status, int index);
+
+/** Gets the state of TTLout*/
+PLUGIN_API int* getTTLoutStatus();
+
+extern int ttlOutStatus[8];
+
+/** Sets the length of TTLoutputs*/
+PLUGIN_API void setTTLoutLength(int length, int index);
+
+/** Gets the length of TTLoutputs*/
+PLUGIN_API int* getTTLoutLength();
+
+extern int TTLoutLength[8];
+
+
 /** Set new recording directory */
 PLUGIN_API void setRecordingDirectory(String dir);
 

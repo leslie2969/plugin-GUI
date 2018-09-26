@@ -105,7 +105,8 @@ public:
     void setFastTTLSettle (bool state, int channel);
     void setTTLoutputMode (bool state);
     void setDAChpf (float cutoff, bool enabled);
-	void setDACvalue(int dacChannel, bool enabled);
+	void setTTLvalue(int ttlChannel, bool enabled);
+	void setDACchstatus(int dacChannel, bool enabled);
 
     void scanPorts();
     void enableAdcs (bool);
@@ -162,6 +163,10 @@ private:
     ScopedPointer<Rhd2000EvalBoard> evalBoard;
     Rhd2000Registers chipRegisters;
     ScopedPointer<Rhd2000DataBlock> dataBlock;
+
+	int loopsTTLout[8]; // number of updateBuffer the TTL was on
+	int currentDACstatus;
+	int dacChsStatus[8];
 
     int numChannels;
     bool deviceFound;
@@ -225,6 +230,7 @@ private:
 
     // Sync ouput divide factor
     uint16 clockDivideFactor;
+	//void loadCustomParameters(XmlElement* xml);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RHD2000Thread);
 };

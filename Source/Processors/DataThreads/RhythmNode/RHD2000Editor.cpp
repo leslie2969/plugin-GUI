@@ -119,10 +119,13 @@ void FPGAchannelList::buttonClicked(Button* btn)
 		juce::String str = btn->getButtonText();
 		for (int k = 0; k < 8; k++){
 			juce::String str2 = btnTTLs[k]->getButtonText();
-			CoreServices::sendStatusMessage(str2);
 			if (str == str2){
-				CoreServices::sendStatusMessage("youhou");
 				p->sendSetTTLValue(k, btn->getToggleState());
+				break;
+			}
+			str2 = btnDACs[k]->getButtonText();
+			if (str == str2) {
+				p->SendsetDACchstatus(k, btn->getToggleState());
 				break;
 			}
 		}
@@ -236,6 +239,7 @@ void FPGAchannelList::update()
             }
         }
     }
+	RHD2000Editor* e = static_cast<RHD2000Editor*>(proc->getEditor());
     StringArray ttlNames;
     proc->getEventChannelNames(ttlNames);
     // add buttons for TTL channels
@@ -247,26 +251,30 @@ void FPGAchannelList::update()
         addAndMakeVisible(comp);
         channelComponents.add(comp);
 
-		//*
 		//UtilityButton* dacttlPin = new UtilityButton("ttl" + to_string(k + 1), Font("Small Text", 13, Font::plain));
-		UtilityButton* btn = new UtilityButton("ttl" + to_string(k + 1), Font("Small Text", 13, Font::plain));
-		btn->setBounds(10 + (numActiveHeadstages + 1)*columnWidth, 70 + k * 22, columnWidth, 22);
+		UtilityButton* btn = new UtilityButton("TTL" + to_string(k + 1), Font("Small Text", 13, Font::plain));
+		btn->setBounds(10 + (numActiveHeadstages + 1)*columnWidth, 70 + k * 22, columnWidth/2, 22);
 		btn->addListener(this);
 		btn->setClickingTogglesState(true);
 		btn->setTooltip("Digital Out");
+		btn->setToggleState(e->ttlOutArray[k], dontSendNotification);
+		e->sendSetTTLValue(k, btn->getToggleState());
 		btnTTLs.add(btn);
 		addAndMakeVisible(btn);
-		//*/
     }
 
-	/*
-	dacttlPin1->setBounds(10 + (numActiveHeadstages + 1)*columnWidth, 70 + 0 * 22, columnWidth, 22);
-	dacttlPin1->addListener(this);
-	dacttlPin1->setClickingTogglesState(true);
-	dacttlPin1->setTooltip("Digital Out");
-	addAndMakeVisible(dacttlPin1);
-	*/
-
+	for (int k = 0; k<8; k++)
+	{
+		UtilityButton* btn = new UtilityButton("DAC" + to_string(k + 1), Font("Small Text", 13, Font::plain));
+		btn->setBounds(10 + (numActiveHeadstages + 2)*columnWidth, 70 + k * 22, columnWidth/2, 22);
+		btn->addListener(this);
+		btn->setClickingTogglesState(true);
+		btn->setTooltip("Analog Out");
+		btn->setToggleState(e->dacChsStatus[k], dontSendNotification);
+		e->SendsetDACchstatus(k, btn->getToggleState());
+		btnDACs.add(btn);
+		addAndMakeVisible(btn);
+	}
 
     Label* lbl = new Label("TTL Events","TTL Events");
     lbl->setEditable(false);
@@ -746,7 +754,6 @@ RHD2000Editor::RHD2000Editor(GenericProcessor* parentNode,
 
 RHD2000Editor::~RHD2000Editor()
 {
-
 }
 
 void RHD2000Editor::scanPorts()
@@ -797,10 +804,19 @@ void RHD2000Editor::handleAsyncUpdate()
 
 }
 
-void RHD2000Editor::sendSetTTLValue(int dacChannel, bool en)
+void RHD2000Editor::sendSetTTLValue(int ttlChannel, bool en)
 {
-	board->setDACvalue(dacChannel, en);
+	ttlOutArray[ttlChannel] = en ? 1 : 0; 
+	board->setTTLvalue(ttlChannel, en);
 }
+
+void RHD2000Editor::SendsetDACchstatus(int dacChannel, bool en)
+{
+	dacChsStatus[dacChannel] = en ? 1 : 0;
+	board->setDACchstatus(dacChannel, en);
+
+}
+
 
 void RHD2000Editor::setSaveImpedance(bool en)
 {
@@ -970,6 +986,10 @@ void RHD2000Editor::saveCustomParameters(XmlElement* xml)
     xml->setAttribute("auto_measure_impedances",measureWhenRecording);
 	xml->setAttribute("LEDs", ledButton->getToggleState());
 	xml->setAttribute("ClockDivideRatio", clockInterface->getClockDivideRatio());
+	for (int k = 0; k < 8; k++) {
+		xml->setAttribute({ "TTLstatus" + to_string(k + 1) }, ttlOutArray[k]);
+		xml->setAttribute({ "DACstatus" + to_string(k + 1) }, dacChsStatus[k]);
+	}
 }
 
 void RHD2000Editor::loadCustomParameters(XmlElement* xml)
@@ -992,7 +1012,13 @@ void RHD2000Editor::loadCustomParameters(XmlElement* xml)
     saveImpedances = xml->getBoolAttribute("save_impedance_measurements");
     measureWhenRecording = xml->getBoolAttribute("auto_measure_impedances");
 	ledButton->setToggleState(xml->getBoolAttribute("LEDs", true),sendNotification);
-    clockInterface->setClockDivideRatio(xml->getIntAttribute("ClockDivideRatio")); 
+    clockInterface->setClockDivideRatio(xml->getIntAttribute("ClockDivideRatio"));
+	for (int k = 0; k < 8; k++) {
+		ttlOutArray[k]=xml->getIntAttribute({ "TTLstatus" + to_string(k + 1) });
+		
+		dacChsStatus[k]=xml->getIntAttribute({ "DACstatus" + to_string(k + 1) });
+		SendsetDACchstatus(k, dacChsStatus[k]);
+	}
 }
 
 

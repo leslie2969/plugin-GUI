@@ -146,15 +146,18 @@ RHD2000Thread::RHD2000Thread(SourceNode* sn) : DataThread(sn),
         dacThresholds = new float[8];
         dacChannelsToUpdate = new bool[8];
 		ttlOutArray = new int[16];
+		currentDACstatus = 65534 / 2;
         for (int k = 0; k < 8; k++)
         {
             dacChannelsToUpdate[k] = true;
-            dacStream[k] = 32;
+            dacStream[k] = 0;
             setDACthreshold(k, 65534);
             dacChannels[k] = 0;
             dacThresholds[k] = 0;
         }
 
+		loopsTTLout[8] = { 0 };
+		//dacChsStatus[8] = { 0 };
         // evalBoard->getDacInformation(dacChannels,dacThresholds);
 
         //	setDefaultNamingScheme(numberingScheme);
@@ -1024,11 +1027,17 @@ void RHD2000Thread::setTTLoutputMode(bool state)
     dacOutputShouldChange = true;
 }
 
-void RHD2000Thread::setDACvalue(int dacChannel, bool enabled)
+void RHD2000Thread::setDACchstatus(int dacChannel, bool enabled)
 {
-	ttlOutArray[dacChannel] = enabled ? 1 : 0;
+	dacChsStatus[dacChannel] = enabled ? 1 : 0;
+	dacOutputShouldChange = true;
+}
+
+void RHD2000Thread::setTTLvalue(int ttlChannel, bool enabled)
+{
+	ttlOutArray[ttlChannel] = enabled ? 1 : 0;
 	ttlMode = false;
-	dacOutputShouldChange = true;	
+	dacOutputShouldChange = true;
 }
 
 void RHD2000Thread::setDAChpf(float cutoff, bool enabled)
@@ -1177,6 +1186,16 @@ void RHD2000Thread::enableAdcs(bool t)
     sourceBuffers[0]->resize (getNumChannels(), 10000);
 }
 
+/*
+void RHD2000Thread::loadCustomParameters(XmlElement* xml)
+{
+	for (int k = 0; k < 8; k++) {
+		ttlOutArray[k] = xml->getIntAttribute({ "TTLstatus" + to_string(k + 1) });
+
+		dacChsStatus[k] = xml->getIntAttribute({ "DACstatus" + to_string(k + 1) });
+		std::cout << "dac " << k + 1 << " : " << dacChsStatus[k] << std::endl;
+	}
+}*/
 
 void RHD2000Thread::setSampleRate(int sampleRateIndex, bool isTemporary)
 {
@@ -1458,6 +1477,14 @@ bool RHD2000Thread::stopAcquisition()
     //  isTransmitting = false;
     std::cout << "RHD2000 data thread stopping acquisition." << std::endl;
 
+	for (int ttl = 0; ttl < 8; ttl++) {
+		ttlOutArray[ttl] = 0;
+		CoreServices::setTTLoutStatus(0, ttl);
+	}
+	dacOutputShouldChange = 1;
+	loopsTTLout[8] = { 0 };
+
+
     if (isThreadRunning())
     {
         signalThreadShouldExit();
@@ -1497,6 +1524,7 @@ bool RHD2000Thread::stopAcquisition()
         evalBoard->setLedDisplay(ledArray);
     }
 
+
     isTransmitting = false;
 	dacOutputShouldChange = false;
 
@@ -1507,12 +1535,12 @@ bool RHD2000Thread::updateBuffer()
 {
 	//int chOffset;
 	unsigned char* bufferPtr;
-    //cout << "Number of 16-bit words in FIFO: " << evalBoard->numWordsInFifo() << endl;
-    //cout << "Block size: " << blockSize << endl;
-   
+	//cout << "Number of 16-bit words in FIFO: " << evalBoard->numWordsInFifo() << endl;
+	//cout << "Block size: " << blockSize << endl;
+
 	//std::cout << "Current number of words: " <<  evalBoard->numWordsInFifo() << " for " << blockSize << std::endl;
-    if (evalBoard->isUSB3() || evalBoard->numWordsInFifo() >= blockSize)
-    {
+	if (evalBoard->isUSB3() || evalBoard->numWordsInFifo() >= blockSize)
+	{
 		bool return_code;
 
 		return_code = evalBoard->readRawDataBlock(&bufferPtr);
@@ -1521,11 +1549,11 @@ bool RHD2000Thread::updateBuffer()
 		int auxIndex, chanIndex;
 		int numStreams = enabledStreams.size();
 		int nSamps = Rhd2000DataBlock::getSamplesPerDataBlock(evalBoard->isUSB3());
-		
+
 		//evalBoard->printFIFOmetrics();
-        for (int samp = 0; samp < nSamps; samp++)
-        {
-            int channel = -1;
+		for (int samp = 0; samp < nSamps; samp++)
+		{
+			int channel = -1;
 
 			if (!Rhd2000DataBlock::checkUsbHeader(bufferPtr, index))
 			{
@@ -1534,7 +1562,7 @@ bool RHD2000Thread::updateBuffer()
 			}
 
 			index += 8;
-			timestamps.set(0,Rhd2000DataBlock::convertUsbTimeStamp(bufferPtr,index));
+			timestamps.set(0, Rhd2000DataBlock::convertUsbTimeStamp(bufferPtr, index));
 			index += 4;
 			auxIndex = index;
 			//skip the aux channels
@@ -1543,7 +1571,7 @@ bool RHD2000Thread::updateBuffer()
 			for (int dataStream = 0; dataStream < numStreams; dataStream++)
 			{
 				int nChans = numChannelsPerDataStream[dataStream];
-				chanIndex = index + 2*dataStream;
+				chanIndex = index + 2 * dataStream;
 				if ((chipId[dataStream] == CHIP_ID_RHD2132) && (nChans == 16)) //RHD2132 16ch. headstage
 				{
 					chanIndex += 2 * RHD2132_16CH_OFFSET*numStreams;
@@ -1552,17 +1580,17 @@ bool RHD2000Thread::updateBuffer()
 				{
 					channel++;
 					thisSample[channel] = float(*(uint16*)(bufferPtr + chanIndex) - 32768)*0.195f;
-					chanIndex += 2*numStreams;
+					chanIndex += 2 * numStreams;
 				}
 			}
 			index += 64 * numStreams;
 			//now we can do the aux channels
-			auxIndex += 2*numStreams;
+			auxIndex += 2 * numStreams;
 			for (int dataStream = 0; dataStream < numStreams; dataStream++)
 			{
 				if (chipId[dataStream] != CHIP_ID_RHD2164_B)
 				{
-					int auxNum = (samp+3) % 4;
+					int auxNum = (samp + 3) % 4;
 					if (auxNum < 3)
 					{
 						auxSamples[dataStream][auxNum] = float(*(uint16*)(bufferPtr + auxIndex) - 32768)*0.0000374;
@@ -1601,63 +1629,95 @@ bool RHD2000Thread::updateBuffer()
 			ttlEventWords.set(0, *(uint16*)(bufferPtr + index));
 			index += 4;
 			sourceBuffers[0]->addToBuffer(thisSample, &timestamps.getReference(0), &ttlEventWords.getReference(0), 1);
-        }
+		}
 
-    }
+		//}
+
+		//else{
+		
+		int* lengths = CoreServices::getTTLoutLength();
+		int  samplerate = CoreServices::getGlobalSampleRate();
+
+		int* ttlstates = CoreServices::getTTLoutStatus();
+		for (int ttl = 0; ttl < 8; ttl++) {
+			int ttlstate = ttlstates[ttl];
+			int length= lengths[ttl];
+			int nblocks = samplerate * length / 1000 / nSamps;
+			if (ttlstate == 1 && loopsTTLout[ttl] == 0) {
+				ttlOutArray[ttl] = ttlstate;
+				dacOutputShouldChange = 1;
+				loopsTTLout[ttl] = 1;
+			}
+			else if (ttlstate == 1 && loopsTTLout[ttl] >= nblocks) {
+				ttlOutArray[ttl] = 0;
+				dacOutputShouldChange = 1;
+				CoreServices::setTTLoutStatus(0, ttl);
+				loopsTTLout[ttl] = 0;
+			}
+			else if (ttlstate == 1 && loopsTTLout > 0) {
+				loopsTTLout[ttl] += 1;
+			}
+		}
+		
+		
+		int dacStatus = CoreServices::getManualDACStatus();
+		if (dacStatus != currentDACstatus) {
+			evalBoard->setDacManual(dacStatus);
+			currentDACstatus = dacStatus;
+		}
 
 
-    if (dacOutputShouldChange)
-	{
-		if (ttlMode){
+
+		//}
+
+		if (dacOutputShouldChange)
+		{
 			dacOutputShouldChange = false;
-			CoreServices::sendStatusMessage("Not all TTLs are manual.");
-
-			std::cout << "DAC" << std::endl;
-			for (int k = 0; k < 8; k++)
-			{
-				if (dacChannelsToUpdate[k])
+			if (ttlMode){
+				std::cout << "DAC" << std::endl;
+				for (int k = 0; k < 8; k++)
 				{
-					dacChannelsToUpdate[k] = false;
-					if (dacChannels[k] >= 0)
+					if (dacChannelsToUpdate[k])
 					{
-						evalBoard->enableDac(k, true);
-						evalBoard->selectDacDataStream(k, dacStream[k]);
-						evalBoard->selectDacDataChannel(k, dacChannels[k]);
-						evalBoard->setDacThreshold(k, (int)abs((dacThresholds[k] / 0.195) + 32768), dacThresholds[k] >= 0);
-						// evalBoard->setDacThresholdVoltage(k, (int) dacThresholds[k]);
-					}
-					else
-					{
-						evalBoard->enableDac(k, false);
+						dacChannelsToUpdate[k] = false;
+						if (dacChannels[k] >= 0)
+						{
+							evalBoard->enableDac(k, true);
+							evalBoard->selectDacDataStream(k, dacStream[k]);
+							evalBoard->selectDacDataChannel(k, dacChannels[k]);
+							evalBoard->setDacThreshold(k, (int)abs((dacThresholds[k] / 0.195) + 32768), dacThresholds[k] >= 0);
+							// evalBoard->setDacThresholdVoltage(k, (int) dacThresholds[k]);
+						}
+						else
+						{
+							evalBoard->enableDac(k, false);
+						}
 					}
 				}
-			}
 
-			evalBoard->setTtlMode(ttlMode ? 1 : 0);
-			evalBoard->enableExternalFastSettle(fastTTLSettleEnabled);
-			evalBoard->setExternalFastSettleChannel(fastSettleTTLChannel);
-			evalBoard->setDacHighpassFilter(desiredDAChpf);
-			evalBoard->enableDacHighpassFilter(desiredDAChpfState);
-			evalBoard->enableBoardLeds(ledsEnabled);
-			evalBoard->setClockDivider(clockDivideFactor);
+				evalBoard->setTtlMode(ttlMode ? 1 : 0);
+				evalBoard->enableExternalFastSettle(fastTTLSettleEnabled);
+				evalBoard->setExternalFastSettleChannel(fastSettleTTLChannel);
+				evalBoard->setDacHighpassFilter(desiredDAChpf);
+				evalBoard->enableDacHighpassFilter(desiredDAChpfState);
+				evalBoard->enableBoardLeds(ledsEnabled);
+				evalBoard->setClockDivider(clockDivideFactor);
 
-		}
-		else {
-			dacOutputShouldChange = false;
-			CoreServices::sendStatusMessage("All TTLs are manual.");
-			evalBoard->setTtlMode(ttlMode);
-			evalBoard->setTtlOut(ttlOutArray);
-			evalBoard->enableDac(2, true);
-			evalBoard->selectDacDataStream(2, 16);
-			if (ttlOutArray[0]){
-				evalBoard->setDacManual(65535);
 			}
 			else {
-				evalBoard->setDacManual(0);
-				
+				for (int k = 0; k < 8; k++) {
+					evalBoard->enableDac(k, dacChsStatus[k]);
+					evalBoard->selectDacDataStream(k, 16);
+				}
+				evalBoard->setTtlMode(ttlMode ? 1 : 0);
+				evalBoard->setTtlOut(ttlOutArray);
+				evalBoard->enableBoardLeds(ledsEnabled);
+				evalBoard->setClockDivider(clockDivideFactor);
 			}
+			
 		}
-    }
+
+	}
 	
     return true;
 

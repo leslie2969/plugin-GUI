@@ -91,6 +91,7 @@ private:
     OwnedArray<Label> staticLabels;
     OwnedArray<FPGAchannelComponent> channelComponents;
 	OwnedArray<UtilityButton> btnTTLs;
+	OwnedArray<UtilityButton> btnDACs;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FPGAchannelList);
 };
 
@@ -190,10 +191,15 @@ public:
     bool getSaveImpedance();
     bool getAutoMeasureImpedance();
 	void sendSetTTLValue(int dacChannel, bool en);
+	void SendsetDACchstatus(int dacChannel, bool en);
 
 	void handleAsyncUpdate();
 
+	int ttlOutArray[8];
+	int dacChsStatus[8];
 private:
+
+	
 
     OwnedArray<HeadstageOptionsInterface> headstageOptionsInterfaces;
     OwnedArray<ElectrodeButton> electrodeButtons;

@@ -88,6 +88,46 @@ int64 getSoftwareTimestamp()
 	return getProcessorGraph()->getGlobalTimestamp(true);
 }
 
+int* getTTLoutStatus()
+{
+	return ttlOutStatus;
+}
+
+void setTTLoutStatus(int status, int index)
+{
+	ttlOutStatus[index] = status;
+}
+
+extern int ttlOutStatus[8] = { 0 };
+
+int* getTTLoutLength()
+{
+	return TTLoutLength;
+}
+
+void setTTLoutLength(int length, int index)
+{
+	TTLoutLength[index] = length;
+}
+
+extern int TTLoutLength[8] = { 0 };
+
+
+
+
+int getManualDACStatus()
+{
+	return ManualDACStatus;
+}
+
+void setManualDACStatus(int status)
+{
+	ManualDACStatus = status;
+}
+
+extern int ManualDACStatus = 65534/2;
+
+
 float getGlobalSampleRate()
 {
 	return getProcessorGraph()->getGlobalSampleRate(false);
